@@ -1,0 +1,20 @@
+Celery Exporter Grafana:
+
+Singlestat round guauge to show workers:  (Gauge)
+sum(celery_workers{job=~"$job"})   (Singlestat round gauge)         (/api/tasks:  name and state?)
+
+Summary task by status: (Gauge)
+sum(rate(celery_tasks{job=~"$job"}[$TIME_FRAME])) by (state)
+
+Task Runtime summary:  (histogram)
+rate(celery_tasks_runtime_seconds_sum{job=~"$job"}[$TIME_FRAME])     (/api/tasks: runtime)
+
+Task Latency:  (histogram)
+rate(celery_task_latency_sum{job=~"$job"}[$TIME_FRAME])              (/api/tasks: ???)
+rate(celery_task_latency_count{job=~"$job"}[$TIME_FRAME])            (/api/tasks: ???)
+
+Top 15 Active tasks:
+topk(15, sum(rate(celery_tasks_by_name{job=~"$job", state='STARTED'}[$TIME_FRAME])) by (app, name))     (/api/task: state, name)
+(same again for Received, Pending, Failure, Retry, and Success)
+
+
