@@ -1,5 +1,4 @@
-flower-prometheus-exporter
-==========================
+# flower-prometheus-exporter
 
 flower-prometheus-exporter is a little exporter for Celery related metrics based on Flower API in 
 order to get picked up by Prometheus. Main idea is to setup alerting based on flower monitoring. 
@@ -11,10 +10,10 @@ So far it provides access to the following metrics:
   grouped by `flower host`
 
 
-How to use
-==========
+## How to use
+
 1. Git clone
-2. Run in terminal: `$ python flower-prometheus-exporter`
+1. Run in terminal: `$ python flower-prometheus-exporter`
 
   ```
   [2019-02-17 22:45:06,254: INFO/root] - Starting up on 0.0.0.0:8888
@@ -39,3 +38,8 @@ For better logging use `--verbose`
 For example:
 `python flower-prometheus-exporter --flower http://127.0.0.1:5000 http://127.0.0.1:6000 http://127.0.0.1:5555
 `
+## Michel notes.
+
+Found this was hitting an empty api point, reworked this to pick up task (name), task-type, and state.
+
+**Cheers!**
