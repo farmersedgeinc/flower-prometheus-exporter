@@ -6,9 +6,9 @@ This was **hugely** inspired by celery-prometheus-exported.
 
 So far it provides access to the following metrics:
 
-* `celery_tasks_by_queue` exposes the number of tasks currently in the queue
-  grouped by `flower host`
-
+* ~`celery_tasks_by_queue` exposes the number of tasks currently in the queue
+  grouped by `flower host`~
+* `celery_tasks_by_task_type_and_state`:wq
 
 ## How to use
 
@@ -38,8 +38,10 @@ For better logging use `--verbose`
 For example:
 `python flower-prometheus-exporter --flower http://127.0.0.1:5000 http://127.0.0.1:6000 http://127.0.0.1:5555
 `
-## Michel notes.
+## Michel notes:
 
 Found this was hitting an empty api point, reworked this to pick up task (name), task-type, and state.
+
+[Flower API doc](https://flower.readthedocs.io/en/latest/api.html)
 
 **Cheers!**
