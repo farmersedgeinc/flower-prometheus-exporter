@@ -8,7 +8,7 @@ So far it provides access to the following metrics:
 
 * ~`celery_tasks_by_queue` exposes the number of tasks currently in the queue
   grouped by `flower host`~
-* `celery_tasks_by_task_type_and_state`
+* `celery_tasks_by_type_and_state`
 
 ## How to use
 
