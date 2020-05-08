@@ -6,12 +6,12 @@ import sys
 
 import prometheus_client
 
-from monitors import TaskMonitorThread
+from monitors import QueueMonitorThread
 
-LOG_FORMAT = "[%(asctime)s: %(levelname)s/%(name)s] - %(message)s"
+LOG_FORMAT = '[%(asctime)s: %(levelname)s/%(name)s] - %(message)s'
 
-DEFAULT_ADDR = os.environ.get("DEFAULT_ADDR", "0.0.0.0:8888")
-FLOWER_HOSTS_LIST = os.environ.get("FLOWER_HOSTS_LIST", "http://127.0.0.1:5555").split()
+DEFAULT_ADDR = os.environ.get('DEFAULT_ADDR', '0.0.0.0:8888')
+FLOWER_HOSTS_LIST = os.environ.get('FLOWER_HOSTS_LIST', 'http://127.0.0.1:5555').split()
 
 
 def main():
@@ -30,7 +30,7 @@ def setup_monitoring_threads(opts):
     threads = []
     logging.debug(f"Running {len(opts.flower_addr)} monitoring threads.")
     for flower_addr in opts.flower_addr:
-        t = TaskMonitorThread(flower_addr)
+        t = QueueMonitorThread(flower_addr)
         t.daemon = True
         t.start()
         threads.append(t)
@@ -38,7 +38,7 @@ def setup_monitoring_threads(opts):
 
 
 def start_httpd(addr):
-    host, port = addr.split(":")
+    host, port = addr.split(':')
     prometheus_client.start_http_server(int(port), host)
 
 
@@ -50,23 +50,15 @@ def shutdown(signum, frame):  # pragma: no cover
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--flower",
-        dest="flower_addr",
-        default=FLOWER_HOSTS_LIST,
-        nargs="+",
-        help="List of urls to the Flower monitor. Defaults to {}".format(
-            FLOWER_HOSTS_LIST
-        ),
-    )
+        '--flower', dest='flower_addr', default=FLOWER_HOSTS_LIST, nargs='+',
+        help="List of urls to the Flower monitor. Defaults to {}".format(FLOWER_HOSTS_LIST))
     parser.add_argument(
-        "--addr",
-        dest="addr",
-        default=DEFAULT_ADDR,
-        help="Address the HTTPD should listen on. Defaults to {}".format(DEFAULT_ADDR),
-    )
+        '--addr', dest='addr', default=DEFAULT_ADDR,
+        help="Address the HTTPD should listen on. Defaults to {}".format(
+            DEFAULT_ADDR))
     parser.add_argument(
-        "--verbose", action="store_true", default=False, help="Enable verbose logging"
-    )
+        '--verbose', action='store_true', default=False,
+        help="Enable verbose logging")
     opts = parser.parse_args()
     if opts.verbose:
         logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
@@ -75,5 +67,5 @@ def parse_arguments():
     return opts
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     main()
