@@ -4,14 +4,14 @@ import time
 import prometheus_client
 import requests
 
-CELERY_TASK_DURATION_BY_STATE = prometheus_client.Gauge(
-    "celery_task_duration_by_state",
-    "Runtime for each task and state",
-    ["name", "state", "runtime"],
+CELERY_WORKERS = prometheus_client.Gauge(
+    "celery_workers", "Number of alive workers", ["app"]
 )
 
+# See https://github.com/prometheus/client_python
 
-class MonitorThread(threading.Thread):
+
+class CeleryWorkersSetupMonitorThread(threading.Thread):
     def __init__(self, flower_host, *args, **kwargs):
         self.flower_host = flower_host
         self.log = logging.getLogger(f"monitor.{flower_host}")
@@ -22,15 +22,22 @@ class MonitorThread(threading.Thread):
 
     def setup_metrics(self):
         logging.info("Setting metrics up")
-        for metric in CELERY_TASK_DURATION_BY_STATE.collect():
+        for metric in CELERY_WORKERS.collect():
             for sample in metric.samples:
-                CELERY_TASK_DURATION_BY_STATE.labels(**sample[1]).set_to_current_time()
+                CELERY_WORKERS.labels(**sample[1]).set(0)
 
     def get_metrics(self):
         while True:
-            self.log.debug(f"Getting data from {self.flower_host}")
+            self.log.debug(f"Getting workers data from {self.flower_host}")
             try:
+                # ALSO WORKS:  data = requests.get('http://granduke:Ambient02@triss-flower:5555/api/workers', timeout=5)
                 data = requests.get(self.endpoint)
+                self.log.debug(
+                    "API request.get status code: "
+                    + str(data.status_code)
+                    + " Endpoint: "
+                    + str(self.endpoint)
+                )
             except requests.exceptions.ConnectionError as e:
                 self.log.error(f"Error receiving data from {self.flower_host} - {e}")
                 return
@@ -56,30 +63,20 @@ class MonitorThread(threading.Thread):
         self.get_metrics()
 
 
-class CeleryTaskDurationByStateMonitorThread(MonitorThread):
+class CeleryWorkersMonitorThread(CeleryWorkersSetupMonitorThread):
     @property
     def endpoint(self):
-        return self.flower_host + "/api/tasks"
+        return self.flower_host + "/api/workers"
 
     def convert_data_to_prometheus(self, data):
         # Here, 'data' is a dictionary type for "print(type(data))".
-        # API call for '/api/tasks' returns JSON with task name, each with kv pairs at the second level,
-        # from which we extract the task's state.
         # See https://flower.readthedocs.io/en/latest/api.html
-
-        for key, value in data.items():
-            state = ""
-            runtime = ""
-            for k1, v1 in value.items():
-                if k1 == "runtime":
-                    runtime = str(v1)
-                    print(runtime)
-                if k1 == "state":
-                    state = str(v1)
-            self.log.debug("TASK: " + key + " STATE: " + state)
-            CELERY_TASK_DURATION_BY_STATE.labels(
-                name=key, state=state, runtime=runtime
-            ).set_to_current_time()
+        self.log.debug("Convert data to prometheus")
+        app = "triss-test"
+        CELERY_WORKERS.labels(app).set(0)
+        for k, v in data.items():
+            self.log.debug("Worker: " + str(k))
+            CELERY_WORKERS.labels(app).inc()
 
 
 # Cheers!
