@@ -4,10 +4,8 @@ import time
 import prometheus_client
 import requests
 
-CELERY_TASKS_BY_TYPE_AND_STATE = prometheus_client.Gauge(
-    "celery_tasks_by_type_and_state",
-    "Tasks with tasks type and state",
-    ["task", "task_type", "state"],
+CELERY_TASKS_BY_NAME = prometheus_client.Gauge(
+    "celery_tasks_by_name", "Count of tasks by name and state", ["name", "state"]
 )
 
 
@@ -22,9 +20,9 @@ class MonitorThread(threading.Thread):
 
     def setup_metrics(self):
         logging.info("Setting metrics up")
-        for metric in CELERY_TASKS_BY_TYPE_AND_STATE.collect():
+        for metric in CELERY_TASKS_BY_NAME.collect():
             for sample in metric.samples:
-                CELERY_TASKS_BY_TYPE_AND_STATE.labels(**sample[1]).set(0)
+                CELERY_TASKS_BY_NAME.labels(**sample[1]).set(0)
 
     def get_metrics(self):
         while True:
@@ -63,19 +61,28 @@ class TaskMonitorThread(MonitorThread):
 
     def convert_data_to_prometheus(self, data):
         # Here, 'data' is a dictionary type for "print(type(data))".
-        # API call for '/api/tasks' returns JSON with task name, each with kv pairs at the second level.
-        # We extract the task-type (field 'name') and state of the task (field 'state').
+        # API call for '/api/tasks' returns JSON with task name, each with kv pairs at the second level,
+        # from which we extract the task's state.
         # See https://flower.readthedocs.io/en/latest/api.html
+
+        # As some of these tasks may not have purged off since the last API call, we first reset
+        # all of the counters to zero.
         for key, value in data.items():
-            name = ""
             state = ""
             for k1, v1 in value.items():
-                if k1 == "name":
-                    name = str(v1)
                 if k1 == "state":
                     state = str(v1)
-            self.log.debug("TASK: " + key + " TASK TYPE: " + name + " STATE: " + state)
-            CELERY_TASKS_BY_TYPE_AND_STATE.labels(task=key, task_type=name, state=state)
+            self.log.debug("TASK: " + key + " STATE: " + state)
+            CELERY_TASKS_BY_NAME.labels(name=key, state=state).set(0)
+
+        # Ok, now go trough the data capture again and increment the counters.
+        for key, value in data.items():
+            state = ""
+            for k1, v1 in value.items():
+                if k1 == "state":
+                    state = str(v1)
+            self.log.debug("TASK: " + key + " STATE: " + state)
+            CELERY_TASKS_BY_NAME.labels(name=key, state=state).inc()
 
 
 # Cheers!
