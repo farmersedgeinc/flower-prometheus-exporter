@@ -1,4 +1,4 @@
-Celery Exporter Grafana:
+For the existing Trash/Celery dashboard in Grafana:
 
 Singlestat round guauge to show workers:  (Gauge)
 sum(celery_workers{job=~"$job"})   (Singlestat round gauge)         (/api/tasks:  name and state?)
@@ -18,3 +18,42 @@ topk(15, sum(rate(celery_tasks_by_name{job=~"$job", state='STARTED'}[$TIME_FRAME
 (same again for Received, Pending, Failure, Retry, and Success)
 
 
+
+
+Soooo.... I'm building the Flower dashboard for Grafana:
+
+I have:
+
+1) CELERY_WORKERS (Gauge)  [app] with count   (This gives the worker's name)
+
+
+2) CELERY_TASK_TYPES_BY_STATE ['task_type', 'state'] with count
+
+
+3) CELERY_TASKS_BY_NAME ['name', 'state'] with count.  So we can see what is in:
+	FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS
+
+
+Next:
+
+Latency for RECEIVED and PENDING? RETRY?
+
+Runtime for STARTED?
+
+CELERY_TASK_DURATION_BY_STATE ['name', 'state', 'runtime']   
+    histogram going into duration buckets, or gauge with `.set_to_current_time()` ???
+
+
+  histogram??
+rate(celery_tasks_runtime_seconds_sum{job=~"$job"}[$TIME_FRAME])
+
+https://prometheus.io/docs/practices/histograms/  (You would use buckets for say, runtimes incurred by various task types, as an example)
+See "https://prometheus.io/docs/practices/histograms/#apdex-score"
+
+https://www.robustperception.io/how-does-a-prometheus-histogram-work
+
+Runtime goes into bucket?  Task-name, state, runtime.
+
+
+
+Prom types: https://github.com/prometheus/client_python
