@@ -29,9 +29,16 @@ I have:
 
 2) CELERY_TASK_TYPES_BY_STATE ['task_type', 'state'] with count
 
+rate(celery_task_types_by_state{job=~"$job",state="FAILURE"}[5m])
+sum(celery_task_types_by_state{job=~"$job",state="FAILURE"}) by (task_type)
+sum(celery_task_types_by_state{job=~"$job"}) by (task_type, status)   
+sum(celery_task_types_by_state{job=~"$job", state="RECEIVED"}) by (task_type)   <<<<<<<<<<<<<<
+
 
 3) CELERY_TASKS_BY_NAME ['name', 'state'] with count.  So we can see what is in:
 	FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS
+
+4) CELERY_TASK_DURATION_BY_STATE ['name', 'runtime', 'state'].set_get_current_time()
 
 
 Next:
@@ -57,3 +64,8 @@ Runtime goes into bucket?  Task-name, state, runtime.
 
 
 Prom types: https://github.com/prometheus/client_python
+
+rate(celery_task_types_by_state{job=~"$job",state="FAILURE"}[5m])
+
+ISSUE WITH RESTARTS, need to be able to add a timeout to the API call.  Code will not allow this extra parameter to be added
+as is written.  These restarts are the reason, I beleive, we see gaps in the grafana graphs.
