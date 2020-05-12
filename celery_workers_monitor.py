@@ -30,7 +30,10 @@ class CeleryWorkersSetupMonitorThread(threading.Thread):
         while True:
             self.log.debug(f"Getting workers data from {self.flower_host}")
             try:
-                data = requests.get(self.endpoint)
+                req_session = requests.Session()
+                req_request = requests.Request("GET", self.endpoint)
+                request_prepped = req_request.prepare()
+                data = req_session.send(request_prepped, timeout=(3, 15))
                 self.log.debug(
                     "API request.get status code: "
                     + str(data.status_code)
@@ -65,6 +68,7 @@ class CeleryWorkersSetupMonitorThread(threading.Thread):
 class CeleryWorkersMonitorThread(CeleryWorkersSetupMonitorThread):
     @property
     def endpoint(self):
+        self.log.debug("URL endpoint: " + self.flower_host)
         return self.flower_host + "/api/workers"
 
     def convert_data_to_prometheus(self, data):

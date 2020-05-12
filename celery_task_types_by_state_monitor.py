@@ -32,7 +32,10 @@ class CeleryTaskTypesByStateSetupMonitorThread(threading.Thread):
         while True:
             self.log.debug(f"Getting workers data from {self.flower_host}")
             try:
-                data = requests.get(self.endpoint)
+                req_session = requests.Session()
+                req_request = requests.Request("GET", self.endpoint)
+                request_prepped = req_request.prepare()
+                data = req_session.send(request_prepped, timeout=(3, 15))
                 self.log.debug(
                     "API request.get status code: "
                     + str(data.status_code)

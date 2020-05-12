@@ -69,3 +69,7 @@ rate(celery_task_types_by_state{job=~"$job",state="FAILURE"}[5m])
 
 ISSUE WITH RESTARTS, need to be able to add a timeout to the API call.  Code will not allow this extra parameter to be added
 as is written.  These restarts are the reason, I beleive, we see gaps in the grafana graphs.
+
+[Requests Module Advanced Docs](https://requests.readthedocs.io/en/master/user/advanced/)
+
+**Cheers!**

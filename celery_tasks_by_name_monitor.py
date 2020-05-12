@@ -28,7 +28,10 @@ class CeleryTasksByNameSetupMonitorThread(threading.Thread):
         while True:
             self.log.debug(f"Getting workers data from {self.flower_host}")
             try:
-                data = requests.get(self.endpoint)
+                req_session = requests.Session()
+                req_request = requests.Request("GET", self.endpoint)
+                request_prepped = req_request.prepare()
+                data = req_session.send(request_prepped, timeout=(3, 15))
             except requests.exceptions.ConnectionError as e:
                 self.log.error(f"Error receiving data from {self.flower_host} - {e}")
                 return
@@ -57,6 +60,7 @@ class CeleryTasksByNameSetupMonitorThread(threading.Thread):
 class CeleryTasksByNameMonitorThread(CeleryTasksByNameSetupMonitorThread):
     @property
     def endpoint(self):
+        self.log.debug("URL endpoint: " + self.flower_host)
         return self.flower_host + "/api/tasks"
 
     def convert_data_to_prometheus(self, data):
@@ -72,7 +76,6 @@ class CeleryTasksByNameMonitorThread(CeleryTasksByNameSetupMonitorThread):
             for k1, v1 in value.items():
                 if k1 == "state":
                     state = str(v1)
-            self.log.debug("TASK: " + key + " STATE: " + state)
             CELERY_TASKS_BY_NAME.labels(name=key, state=state).set(0)
 
         # Ok, now go trough the data capture again and increment the counters.
@@ -81,7 +84,6 @@ class CeleryTasksByNameMonitorThread(CeleryTasksByNameSetupMonitorThread):
             for k1, v1 in value.items():
                 if k1 == "state":
                     state = str(v1)
-            self.log.debug("TASK: " + key + " STATE: " + state)
             CELERY_TASKS_BY_NAME.labels(name=key, state=state).inc()
 
 

@@ -30,7 +30,10 @@ class CeleryTaskDurationbyStateSetupMonitorThread(threading.Thread):
         while True:
             self.log.debug(f"Getting data from {self.flower_host}")
             try:
-                data = requests.get(self.endpoint)
+                req_session = requests.Session()
+                req_request = requests.Request("GET", self.endpoint)
+                request_prepped = req_request.prepare()
+                data = req_session.send(request_prepped, timeout=(3, 15))
             except requests.exceptions.ConnectionError as e:
                 self.log.error(f"Error receiving data from {self.flower_host} - {e}")
                 return
@@ -61,6 +64,7 @@ class CeleryTaskDurationByStateMonitorThread(
 ):
     @property
     def endpoint(self):
+        self.log.debug("URL endpoint: " + self.flower_host)
         return self.flower_host + "/api/tasks"
 
     def convert_data_to_prometheus(self, data):
