@@ -32,7 +32,6 @@ class CeleryTaskTypesByStateSetupMonitorThread(threading.Thread):
         while True:
             self.log.debug(f"Getting workers data from {self.flower_host}")
             try:
-                # ALSO WORKS:  data = requests.get('http://granduke:Ambient02@triss-flower:5555/api/workers', timeout=5)
                 data = requests.get(self.endpoint)
                 self.log.debug(
                     "API request.get status code: "
