@@ -7,11 +7,7 @@
    This is set up as a "Graph" in grafana with `sum(celery_task_types_by_state{job=~"$job", state="RECEIVED"}) by (task_type)`,
    just change the "state" for each kind "FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS".
 
-3) CELERY_TASKS_BY_NAME ['name', 'state'] with count.  So we can see what is in:
-	FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS
-   (This one is currently commented out from flower_prometheus_exporter.py)
-
-4) CELERY_TASK_DURATION_BY_STATE ['name', 'runtime', 'state'] with runtime
+3) CELERY_TASK_DURATION_BY_STATE ['name', 'runtime', 'state'] with runtime
    This once will be set up as a "Graph" in grafana with `topk(15, celery_task_duration_seconds_by_state{job="michel-flower-exporter", state="SUCCESS"})`
 
 ## References:

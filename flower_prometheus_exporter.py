@@ -10,7 +10,6 @@ from celery_task_duration_seconds_by_state_monitor import (
     CeleryTaskDurationSecondsByStateMonitorThread,
 )
 from celery_task_types_by_state_monitor import CeleryTaskTypesByStateMonitorThread
-from celery_tasks_by_name_monitor import CeleryTasksByNameMonitorThread
 from celery_workers_monitor import CeleryWorkersMonitorThread
 
 LOG_FORMAT = "[%(asctime)s: %(levelname)s/%(name)s] - %(message)s"
@@ -44,11 +43,6 @@ def setup_monitoring_threads(opts):
         cttbs.daemon = True
         cttbs.start()
         threads.append(cttbs)
-        #
-        # ctbn = CeleryTasksByNameMonitorThread(flower_addr)
-        # ctbn.daemon = True
-        # ctbn.start()
-        # threads.append(ctbn)
         #
         cw = CeleryWorkersMonitorThread(flower_addr)
         cw.daemon = True
