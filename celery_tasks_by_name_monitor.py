@@ -12,8 +12,9 @@ CELERY_TASKS_BY_NAME = prometheus_client.Gauge(
 class CeleryTasksByNameSetupMonitorThread(threading.Thread):
     def __init__(self, flower_host, *args, **kwargs):
         self.flower_host = flower_host
-        self.log = logging.getLogger(f"monitor.{flower_host}")
-        self.log.info("Setting up monitor thread")
+        # self.log = logging.getLogger(f"monitor.{flower_host}")
+        self.log = logging.getLogger("monitor")
+        self.log.info("Setting up monitor thread: CeleryTasksByNameMonitorThread")
         self.log.debug(f"Running monitoring thread for {self.flower_host} host.")
         self.setup_metrics()
         super().__init__(*args, **kwargs)
@@ -30,10 +31,12 @@ class CeleryTasksByNameSetupMonitorThread(threading.Thread):
             try:
                 req_session = requests.Session()
                 req_request = requests.Request("GET", self.endpoint)
-                request_prepped = req_request.prepare()
+                # request_prepped = req_request.prepare()
+                request_prepped = req_session.prepare_request(req_request)
                 data = req_session.send(request_prepped, timeout=(3, 15))
             except requests.exceptions.ConnectionError as e:
-                self.log.error(f"Error receiving data from {self.flower_host} - {e}")
+                # self.log.error(f"Error receiving data from {self.flower_host} - {e}")
+                self.log.error(f"Error receiving data - {e}")
                 return
             if data.status_code != 200:
                 self.log.error(
@@ -53,7 +56,10 @@ class CeleryTasksByNameSetupMonitorThread(threading.Thread):
         raise NotImplementedError
 
     def run(self):
-        self.log.info(f"Running monitor thread for {self.flower_host}")
+        self.log.debug(
+            f"Running monitor thread CeleryTasksByNameMonitorThread for {self.flower_host}"
+        )
+        self.log.info(f"Running monitor thread CeleryTasksByNameMonitorThread")
         self.get_metrics()
 
 

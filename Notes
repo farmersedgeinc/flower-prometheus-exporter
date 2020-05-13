@@ -73,3 +73,54 @@ as is written.  These restarts are the reason, I beleive, we see gaps in the gra
 [Requests Module Advanced Docs](https://requests.readthedocs.io/en/master/user/advanced/)
 
 **Cheers!**
+
+
+Possible restart for "complete":
+================================
+
+Exception in thread Thread-2:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.6/site-packages/urllib3/response.py", line 362, in _error_catcher
+    yield
+  File "/usr/local/lib/python3.6/site-packages/urllib3/response.py", line 444, in read
+    data = self._fp.read(amt)
+  File "/usr/local/lib/python3.6/http/client.py", line 459, in read
+    n = self.readinto(b)
+  File "/usr/local/lib/python3.6/http/client.py", line 503, in readinto
+    n = self.fp.readinto(b)
+  File "/usr/local/lib/python3.6/socket.py", line 586, in readinto
+    return self._sock.recv_into(b)
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.6/site-packages/requests/models.py", line 750, in generate
+    for chunk in self.raw.stream(chunk_size, decode_content=True):
+  File "/usr/local/lib/python3.6/site-packages/urllib3/response.py", line 496, in stream
+    data = self.read(amt=amt, decode_content=decode_content)
+  File "/usr/local/lib/python3.6/site-packages/urllib3/response.py", line 461, in read
+    raise IncompleteRead(self._fp_bytes_read, self.length_remaining)
+  File "/usr/local/lib/python3.6/contextlib.py", line 99, in __exit__
+    self.gen.throw(type, value, traceback)
+  File "/usr/local/lib/python3.6/site-packages/urllib3/response.py", line 380, in _error_catcher
+    raise ProtocolError('Connection broken: %r' % e, e)
+urllib3.exceptions.ProtocolError: ("Connection broken: ConnectionResetError(104, 'Connection reset by peer')", ConnectionResetError(104, 'Connection reset by peer'))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.6/threading.py", line 916, in _bootstrap_inner
+    self.run()
+  File "/app/celery_task_types_by_state_monitor.py", line 67, in run
+    self.get_metrics()
+  File "/app/celery_task_types_by_state_monitor.py", line 38, in get_metrics
+    data = req_session.send(request_prepped, timeout=(3, 15))
+  File "/usr/local/lib/python3.6/site-packages/requests/sessions.py", line 686, in send
+    r.content
+  File "/usr/local/lib/python3.6/site-packages/requests/models.py", line 828, in content
+    self._content = b''.join(self.iter_content(CONTENT_CHUNK_SIZE)) or b''
+  File "/usr/local/lib/python3.6/site-packages/requests/models.py", line 753, in generate
+    raise ChunkedEncodingError(e)
+requests.exceptions.ChunkedEncodingError: ("Connection broken: ConnectionResetError(104, 'Connection reset by peer')", ConnectionResetError(104, 'Connection reset by peer'))
+
