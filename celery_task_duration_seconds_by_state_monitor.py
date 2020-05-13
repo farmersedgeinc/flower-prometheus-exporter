@@ -11,7 +11,7 @@ CELERY_TASK_DURATION_SECONDS_BY_STATE = prometheus_client.Gauge(
 )
 
 
-class CeleryTaskDurationSecondsbyStateSetupMonitorThread(threading.Thread):
+class CeleryTaskDurationSecondsByStateSetupMonitorThread(threading.Thread):
     def __init__(self, flower_host, *args, **kwargs):
         self.flower_host = flower_host
         # self.log = logging.getLogger(f"monitor.{flower_host}")
@@ -29,7 +29,7 @@ class CeleryTaskDurationSecondsbyStateSetupMonitorThread(threading.Thread):
             for sample in metric.samples:
                 CELERY_TASK_DURATION_SECONDS_BY_STATE.labels(
                     **sample[1]
-                ).set_to_current_time()
+                ).set(0.0)
 
     def get_metrics(self):
         while True:
@@ -72,7 +72,7 @@ class CeleryTaskDurationSecondsbyStateSetupMonitorThread(threading.Thread):
 
 
 class CeleryTaskDurationSecondsByStateMonitorThread(
-    CeleryTaskDurationSecondsbyStateSetupMonitorThread
+    CeleryTaskDurationSecondsByStateSetupMonitorThread
 ):
     @property
     def endpoint(self):
