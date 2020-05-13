@@ -43,10 +43,10 @@ def setup_monitoring_threads(opts):
         cttbs.start()
         threads.append(cttbs)
         #
-        ctbn = CeleryTasksByNameMonitorThread(flower_addr)
-        ctbn.daemon = True
-        ctbn.start()
-        threads.append(ctbn)
+        # ctbn = CeleryTasksByNameMonitorThread(flower_addr)
+        # ctbn.daemon = True
+        # ctbn.start()
+        # threads.append(ctbn)
         #
         cw = CeleryWorkersMonitorThread(flower_addr)
         cw.daemon = True

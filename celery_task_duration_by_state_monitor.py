@@ -81,7 +81,6 @@ class CeleryTaskDurationByStateMonitorThread(
                     runtime = str(v1)
                 if k1 == "state":
                     state = str(v1)
-            self.log.debug("TASK: " + key + " STATE: " + state)
             CELERY_TASK_DURATION_BY_STATE.labels(
                 name=key, state=state, runtime=runtime
             ).set_to_current_time()
