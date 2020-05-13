@@ -15,6 +15,18 @@ topk(15, sum(celery_task_duration_seconds_by_state{job=~"$job", state="RECEIVED"
 topk(15, sum(rate(celery_task_duration_seconds_by_state{job=~"$job", state="SUCCESS"}[$TIME_FRAME])) by (name))
 
 WORKS in PROM: topk(7, sum(celery_task_duration_seconds_by_state{job="michel-flower-exporter", state="SUCCESS"}) by (name))
+
+WORKS IN PROM:  topk(7, celery_task_duration_seconds_by_state) 
+
+This will take each "NAME" as a seperate thing to get the top X, so then entire list "topk(7, celery_task_duration_seconds_by_state) by (name)"
+
+shorter list when by state: topk(7, celery_task_duration_seconds_by_state) by (state)
+
+sort_desc(celery_task_duration_seconds_by_state{job=~"$job",state="SUCCESS"})  and lengend-format {{name}}
+
+https://prometheus.io/docs/prometheus/latest/querying/functions/
+
+
 ## References:
 
 1. [Histograms](https://prometheus.io/docs/practices/histograms/), you would use buckets for say, runtimes incurred by various task types, as an example.
@@ -78,6 +90,7 @@ Traceback (most recent call last):
 requests.exceptions.ChunkedEncodingError: ("Connection broken: ConnectionResetError(104, 'Connection reset by peer')", ConnectionResetError(104, 'Connection reset by peer'))
 ```
 
-Note, seems that `Thread-x` will match the order the treads are set up in the mainline, starting from "1".
+1. Note, `Thread-x` will match the order the treads are set up in the mainline, starting from "1".
+1. Note, when this event happens at the apex of a CPU sawtooth climb.
 
 **Cheers!**
