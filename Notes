@@ -1,83 +1,40 @@
-For the existing Trash/Celery dashboard in Grafana:
+# TRISS FLOWER Grafana Dashboard:
 
-Singlestat round guauge to show workers:  (Gauge)
-sum(celery_workers{job=~"$job"})   (Singlestat round gauge)         (/api/tasks:  name and state?)
-
-Summary task by status: (Gauge)
-sum(rate(celery_tasks{job=~"$job"}[$TIME_FRAME])) by (state)
-
-Task Runtime summary:  (histogram)
-rate(celery_tasks_runtime_seconds_sum{job=~"$job"}[$TIME_FRAME])     (/api/tasks: runtime)
-
-Task Latency:  (histogram)
-rate(celery_task_latency_sum{job=~"$job"}[$TIME_FRAME])              (/api/tasks: ???)
-rate(celery_task_latency_count{job=~"$job"}[$TIME_FRAME])            (/api/tasks: ???)
-
-Top 15 Active tasks:
-topk(15, sum(rate(celery_tasks_by_name{job=~"$job", state='STARTED'}[$TIME_FRAME])) by (app, name))     (/api/task: state, name)
-(same again for Received, Pending, Failure, Retry, and Success)
-
-
-
-
-Soooo.... I'm building the Flower dashboard for Grafana:
-
-I have:
-
-1) CELERY_WORKERS (Gauge)  [app] with count   (This gives the worker's name)
-
+1) CELERY_WORKERS (Gauge)  [app] with count   (This gives the worker's name, but I am not currently displaying the name in grafana.)
+   This is set up as a "Singlestat" in grafana with "sum(celery_workers{job=~"$job"})"
 
 2) CELERY_TASK_TYPES_BY_STATE ['task_type', 'state'] with count
-
-rate(celery_task_types_by_state{job=~"$job",state="FAILURE"}[5m])
-sum(celery_task_types_by_state{job=~"$job",state="FAILURE"}) by (task_type)
-sum(celery_task_types_by_state{job=~"$job"}) by (task_type, status)   
-sum(celery_task_types_by_state{job=~"$job", state="RECEIVED"}) by (task_type)   <<<<<<<<<<<<<<
+   This is set up as a "Graph" in grafana with "sum(celery_task_types_by_state{job=~"$job", state="RECEIVED"}) by (task_type)",
+   just change the "state" for each kind "FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS".
 
 
 3) CELERY_TASKS_BY_NAME ['name', 'state'] with count.  So we can see what is in:
 	FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS
+   (This one is currently commented out from flower_prometheus_exporter.py)
+
 
 4) CELERY_TASK_DURATION_BY_STATE ['name', 'runtime', 'state'].set_get_current_time()
+   This once will be set up as a "Graph" in grafana with "
+
+topk(15, sum(rate(celery_tasks_by_name{job=~"$job", state='STARTED'}[$TIME_FRAME])) by (app, name))     (/api/task: state, name)
 
 
-Next:
+## References:
 
-Latency for RECEIVED and PENDING? RETRY?
-
-Runtime for STARTED?
-
-CELERY_TASK_DURATION_BY_STATE ['name', 'state', 'runtime']   
-    histogram going into duration buckets, or gauge with `.set_to_current_time()` ???
-
-
-  histogram??
-rate(celery_tasks_runtime_seconds_sum{job=~"$job"}[$TIME_FRAME])
-
-https://prometheus.io/docs/practices/histograms/  (You would use buckets for say, runtimes incurred by various task types, as an example)
-See "https://prometheus.io/docs/practices/histograms/#apdex-score"
-
-https://www.robustperception.io/how-does-a-prometheus-histogram-work
-
-Runtime goes into bucket?  Task-name, state, runtime.
-
-
-
-Prom types: https://github.com/prometheus/client_python
-
-rate(celery_task_types_by_state{job=~"$job",state="FAILURE"}[5m])
-
-ISSUE WITH RESTARTS, need to be able to add a timeout to the API call.  Code will not allow this extra parameter to be added
-as is written.  These restarts are the reason, I beleive, we see gaps in the grafana graphs.
-
-[Requests Module Advanced Docs](https://requests.readthedocs.io/en/master/user/advanced/)
+1. [Histograms](https://prometheus.io/docs/practices/histograms/), you would use buckets for say, runtimes incurred by various task types, as an example.
+1. [Histogram example](https://prometheus.io/docs/practices/histograms/#apdex-score)
+1. [How do histograms work?](https://www.robustperception.io/how-does-a-prometheus-histogram-work)
+1. [Prometheus Types](https://github.com/prometheus/client_python)
+1. [Requests Module Advanced Docs](https://requests.readthedocs.io/en/master/user/advanced/)
 
 **Cheers!**
 
+## Restarts:
 
-Possible restart for "complete":
-================================
+Have determined that a "timeout" event on the does NOT coincide with a restart (for which the termination reason in the pod description is "Completed").
+Did capture this transient error once (seems to be from the "requests" python module:
 
+```
 Exception in thread Thread-2:
 Traceback (most recent call last):
   File "/usr/local/lib/python3.6/site-packages/urllib3/response.py", line 362, in _error_catcher
@@ -123,4 +80,6 @@ Traceback (most recent call last):
   File "/usr/local/lib/python3.6/site-packages/requests/models.py", line 753, in generate
     raise ChunkedEncodingError(e)
 requests.exceptions.ChunkedEncodingError: ("Connection broken: ConnectionResetError(104, 'Connection reset by peer')", ConnectionResetError(104, 'Connection reset by peer'))
+```
 
+**Cheers!**
