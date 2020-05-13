@@ -6,7 +6,9 @@ import sys
 
 import prometheus_client
 
-from celery_task_duration_by_state_monitor import CeleryTaskDurationByStateMonitorThread
+from celery_task_duration_seconds_by_state_monitor import (
+    CeleryTaskDurationSecondsByStateMonitorThread,
+)
 from celery_task_types_by_state_monitor import CeleryTaskTypesByStateMonitorThread
 from celery_tasks_by_name_monitor import CeleryTasksByNameMonitorThread
 from celery_workers_monitor import CeleryWorkersMonitorThread
@@ -33,7 +35,7 @@ def setup_monitoring_threads(opts):
     threads = []
     logging.debug(f"Running {len(opts.flower_addr)} monitoring threads.")
     for flower_addr in opts.flower_addr:
-        ctdbs = CeleryTaskDurationByStateMonitorThread(flower_addr)
+        ctdbs = CeleryTaskDurationSecondsByStateMonitorThread(flower_addr)
         ctdbs.daemon = True
         ctdbs.start()
         threads.append(ctdbs)

@@ -1,23 +1,18 @@
 # TRISS FLOWER Grafana Dashboard:
 
 1) CELERY_WORKERS (Gauge)  [app] with count   (This gives the worker's name, but I am not currently displaying the name in grafana.)
-   This is set up as a "Singlestat" in grafana with "sum(celery_workers{job=~"$job"})"
+   This is set up as a "Singlestat" in grafana with `sum(celery_workers{job=~"$job"})`
 
 2) CELERY_TASK_TYPES_BY_STATE ['task_type', 'state'] with count
-   This is set up as a "Graph" in grafana with "sum(celery_task_types_by_state{job=~"$job", state="RECEIVED"}) by (task_type)",
+   This is set up as a "Graph" in grafana with `sum(celery_task_types_by_state{job=~"$job", state="RECEIVED"}) by (task_type)`,
    just change the "state" for each kind "FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS".
-
 
 3) CELERY_TASKS_BY_NAME ['name', 'state'] with count.  So we can see what is in:
 	FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS
    (This one is currently commented out from flower_prometheus_exporter.py)
 
-
-4) CELERY_TASK_DURATION_BY_STATE ['name', 'runtime', 'state'].set_get_current_time()
-   This once will be set up as a "Graph" in grafana with "
-
-topk(15, sum(rate(celery_tasks_by_name{job=~"$job", state='STARTED'}[$TIME_FRAME])) by (app, name))     (/api/task: state, name)
-
+4) CELERY_TASK_DURATION_BY_STATE ['name', 'runtime', 'state'] with runtime
+   This once will be set up as a "Graph" in grafana with `topk(15, celery_task_duration_seconds_by_state{job="michel-flower-exporter", state="SUCCESS"})`
 
 ## References:
 
@@ -81,5 +76,7 @@ Traceback (most recent call last):
     raise ChunkedEncodingError(e)
 requests.exceptions.ChunkedEncodingError: ("Connection broken: ConnectionResetError(104, 'Connection reset by peer')", ConnectionResetError(104, 'Connection reset by peer'))
 ```
+
+Note, seems that `Thread-x` will match the order the treads are set up in the mainline, starting from "1".
 
 **Cheers!**

@@ -4,20 +4,20 @@ import time
 import prometheus_client
 import requests
 
-CELERY_TASK_DURATION_BY_STATE = prometheus_client.Gauge(
-    "celery_task_duration_by_state",
+CELERY_TASK_DURATION_SECONDS_BY_STATE = prometheus_client.Gauge(
+    "celery_task_duration_seconds_by_state",
     "Runtime for each task and state",
-    ["name", "state", "runtime"],
+    ["name", "state"],
 )
 
 
-class CeleryTaskDurationbyStateSetupMonitorThread(threading.Thread):
+class CeleryTaskDurationSecondsbyStateSetupMonitorThread(threading.Thread):
     def __init__(self, flower_host, *args, **kwargs):
         self.flower_host = flower_host
         # self.log = logging.getLogger(f"monitor.{flower_host}")
         self.log = logging.getLogger("monitor")
         self.log.info(
-            "Setting up monitor thread: CeleryTaskDurationByStateMonitorThread"
+            "Setting up monitor thread: CeleryTaskDurationSecondsByStateMonitorThread"
         )
         self.log.debug(f"Running monitoring thread for {self.flower_host} host.")
         self.setup_metrics()
@@ -25,9 +25,11 @@ class CeleryTaskDurationbyStateSetupMonitorThread(threading.Thread):
 
     def setup_metrics(self):
         logging.info("Setting metrics up")
-        for metric in CELERY_TASK_DURATION_BY_STATE.collect():
+        for metric in CELERY_TASK_DURATION_SECONDS_BY_STATE.collect():
             for sample in metric.samples:
-                CELERY_TASK_DURATION_BY_STATE.labels(**sample[1]).set_to_current_time()
+                CELERY_TASK_DURATION_SECONDS_BY_STATE.labels(
+                    **sample[1]
+                ).set_to_current_time()
 
     def get_metrics(self):
         while True:
@@ -61,14 +63,16 @@ class CeleryTaskDurationbyStateSetupMonitorThread(threading.Thread):
 
     def run(self):
         self.log.debug(
-            f"Running monitor thread CeleryTaskDurationByStateMonitorThread for {self.flower_host}"
+            f"Running monitor thread CeleryTaskDurationSecondsByStateMonitorThread for {self.flower_host}"
         )
-        self.log.info(f"Running monitor thread CeleryTaskDurationByStateMonitorThread")
+        self.log.info(
+            f"Running monitor thread CeleryTaskDurationSecondsByStateMonitorThread"
+        )
         self.get_metrics()
 
 
-class CeleryTaskDurationByStateMonitorThread(
-    CeleryTaskDurationbyStateSetupMonitorThread
+class CeleryTaskDurationSecondsByStateMonitorThread(
+    CeleryTaskDurationSecondsbyStateSetupMonitorThread
 ):
     @property
     def endpoint(self):
@@ -86,12 +90,15 @@ class CeleryTaskDurationByStateMonitorThread(
             runtime = ""
             for k1, v1 in value.items():
                 if k1 == "runtime":
-                    runtime = str(v1)
+                    if v1 is None:
+                        runtime = "0.0"
+                    else:
+                        runtime = str(v1)
                 if k1 == "state":
                     state = str(v1)
-            CELERY_TASK_DURATION_BY_STATE.labels(
-                name=key, state=state, runtime=runtime
-            ).set_to_current_time()
+            CELERY_TASK_DURATION_SECONDS_BY_STATE.labels(name=key, state=state).set(
+                runtime
+            )
 
 
 # Cheers!
