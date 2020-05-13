@@ -3,13 +3,18 @@
 1) CELERY_WORKERS (Gauge)  [app] with count   (This gives the worker's name, but I am not currently displaying the name in grafana.)
    This is set up as a "Singlestat" in grafana with `sum(celery_workers{job=~"$job"})`
 
-2) CELERY_TASK_TYPES_BY_STATE ['task_type', 'state'] with count
+2) CELERY_TASK_TYPES_BY_STATE ['task_type', 'state'] with count of instances of each task_type
    This is set up as a "Graph" in grafana with `sum(celery_task_types_by_state{job=~"$job", state="RECEIVED"}) by (task_type)`,
    just change the "state" for each kind "FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS".
 
-3) CELERY_TASK_DURATION_BY_STATE ['name', 'runtime', 'state'] with runtime
-   This once will be set up as a "Graph" in grafana with `topk(15, celery_task_duration_seconds_by_state{job="michel-flower-exporter", state="SUCCESS"})`
+3) CELERY_TASK_DURATION_BY_STATE ['name', 'state'] with runtime as the counter
+   This is set up as a "Graph" in grafana with `topk(15, celery_task_duration_seconds_by_state{job="michel-flower-exporter", state="SUCCESS"})`
 
+topk(15, sum(celery_task_duration_seconds_by_state{job=~"$job", state="RECEIVED"}) by (name))
+
+topk(15, sum(rate(celery_task_duration_seconds_by_state{job=~"$job", state="SUCCESS"}[$TIME_FRAME])) by (name))
+
+WORKS in PROM: topk(7, sum(celery_task_duration_seconds_by_state{job="michel-flower-exporter", state="SUCCESS"}) by (name))
 ## References:
 
 1. [Histograms](https://prometheus.io/docs/practices/histograms/), you would use buckets for say, runtimes incurred by various task types, as an example.
