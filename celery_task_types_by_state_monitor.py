@@ -16,7 +16,6 @@ CELERY_TASK_TYPES_BY_STATE = prometheus_client.Gauge(
 class CeleryTaskTypesByStateSetupMonitorThread(threading.Thread):
     def __init__(self, flower_host, *args, **kwargs):
         self.flower_host = flower_host
-        # self.log = logging.getLogger(f"monitor.{flower_host}")
         self.log = logging.getLogger("monitor")
         self.log.info("Setting up monitor thread: CeleryTaskTypesByStateMonitorThread")
         self.log.debug(f"Running monitoring thread for {self.flower_host} host.")
@@ -35,7 +34,6 @@ class CeleryTaskTypesByStateSetupMonitorThread(threading.Thread):
             try:
                 req_session = requests.Session()
                 req_request = requests.Request("GET", self.endpoint)
-                # request_prepped = req_request.prepare()
                 request_prepped = req_session.prepare_request(req_request)
                 data = req_session.send(request_prepped, timeout=(3, 15))
                 self.log.debug(
@@ -45,7 +43,6 @@ class CeleryTaskTypesByStateSetupMonitorThread(threading.Thread):
                     + str(self.endpoint)
                 )
             except requests.exceptions.ConnectionError as e:
-                # self.log.error(f"Error receiving data from {self.flower_host} - {e}")
                 self.log.error(f"Error receiving data - {e}")
                 return
             if data.status_code != 200:

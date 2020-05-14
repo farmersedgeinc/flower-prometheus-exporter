@@ -1,6 +1,6 @@
 # TRISS FLOWER Grafana Dashboard:
 
-1) CELERY_WORKERS (Gauge)  [app] with count   (This gives the worker's name, but I am not currently displaying the name in grafana.)
+1) CELERY_WORKERS (Gauge) [app] with count   (This gives the worker's name, but I am not currently displaying the name in grafana.)
    This is set up as a "Singlestat" in grafana with `sum(celery_workers{job=~"$job"})`
 
 2) CELERY_TASK_TYPES_BY_STATE ['task_type', 'state'] with count of instances of each task_type
@@ -8,7 +8,13 @@
    just change the "state" for each kind "FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS".
 
 3) CELERY_TASK_DURATION_BY_STATE ['name', 'state'] with runtime as the counter
-   This is set up as a "Graph" in grafana with `topk(15, celery_task_duration_seconds_by_state{job="michel-flower-exporter", state="SUCCESS"})`
+   This is set up as a "Graph" in grafana with `celery_task_duration_seconds_by_state{job=~"$job",state="RECEIVED"}`
+   With Label Format: `{{name}}`
+
+## Cruft
+
+```
+topk(15, celery_task_duration_seconds_by_state{job="michel-flower-exporter", state="SUCCESS"})
 
 topk(15, sum(celery_task_duration_seconds_by_state{job=~"$job", state="RECEIVED"}) by (name))
 
@@ -25,7 +31,7 @@ shorter list when by state: topk(7, celery_task_duration_seconds_by_state) by (s
 sort_desc(celery_task_duration_seconds_by_state{job=~"$job",state="SUCCESS"})  and lengend-format {{name}}
 
 https://prometheus.io/docs/prometheus/latest/querying/functions/
-
+```
 
 ## References:
 
@@ -34,8 +40,6 @@ https://prometheus.io/docs/prometheus/latest/querying/functions/
 1. [How do histograms work?](https://www.robustperception.io/how-does-a-prometheus-histogram-work)
 1. [Prometheus Types](https://github.com/prometheus/client_python)
 1. [Requests Module Advanced Docs](https://requests.readthedocs.io/en/master/user/advanced/)
-
-**Cheers!**
 
 ## Restarts:
 
@@ -88,6 +92,14 @@ Traceback (most recent call last):
   File "/usr/local/lib/python3.6/site-packages/requests/models.py", line 753, in generate
     raise ChunkedEncodingError(e)
 requests.exceptions.ChunkedEncodingError: ("Connection broken: ConnectionResetError(104, 'Connection reset by peer')", ConnectionResetError(104, 'Connection reset by peer'))
+```
+
+In other cases, looks like a timeout:
+
+```
+  File "/usr/local/lib/python3.6/site-packages/requests/adapters.py", line 529, in send
+    raise ReadTimeout(e, request=request)
+requests.exceptions.ReadTimeout: HTTPConnectionPool(host='triss-flower', port=5555): Read timed out. (read timeout=15)
 ```
 
 1. Note, `Thread-x` will match the order the treads are set up in the mainline, starting from "1".
