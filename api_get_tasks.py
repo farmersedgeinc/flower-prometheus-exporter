@@ -10,14 +10,20 @@ CELERY_TASK_TYPES_BY_STATE = prometheus_client.Gauge(
     ["task_type", "state"],
 )
 
+CELERY_TASK_DURATION_SECONDS_BY_STATE = prometheus_client.Gauge(
+    "celery_task_duration_seconds_by_state",
+    "Runtime for each task and state",
+    ["name", "state"],
+)
+
 # See https://github.com/prometheus/client_python
 
 
-class CeleryTaskTypesByStateSetupMonitorThread(threading.Thread):
+class ApiGetTasksSetupMonitorThread(threading.Thread):
     def __init__(self, flower_host, *args, **kwargs):
         self.flower_host = flower_host
         self.log = logging.getLogger("monitor")
-        self.log.info("Setting up monitor thread: CeleryTaskTypesByStateMonitorThread")
+        self.log.info("Setting up monitor thread: ApiGetTasksMonitorThread")
         self.log.debug(f"Running monitoring thread for {self.flower_host} host.")
         self.setup_metrics()
         super().__init__(*args, **kwargs)
@@ -27,10 +33,13 @@ class CeleryTaskTypesByStateSetupMonitorThread(threading.Thread):
         for metric in CELERY_TASK_TYPES_BY_STATE.collect():
             for sample in metric.samples:
                 CELERY_TASK_TYPES_BY_STATE.labels(**sample[1]).set(0)
+        for metric in CELERY_TASK_DURATION_SECONDS_BY_STATE.collect():
+            for sample in metric.samples:
+                CELERY_TASK_DURATION_SECONDS_BY_STATE.labels(**sample[1]).set(0)
 
     def get_metrics(self):
         while True:
-            self.log.debug(f"Getting workers data from {self.flower_host}")
+            self.log.debug(f"Getting task data from {self.flower_host}")
             try:
                 req_session = requests.Session()
                 req_request = requests.Request("GET", self.endpoint)
@@ -64,13 +73,13 @@ class CeleryTaskTypesByStateSetupMonitorThread(threading.Thread):
 
     def run(self):
         self.log.debug(
-            f"Running monitor thread CeleryTaskTypesByStateMonitorThread for {self.flower_host}"
+            f"Running monitor thread ApiGetTasksMonitorThread for {self.flower_host}"
         )
-        self.log.info(f"Running monitor thread CeleryTaskTypesByStateMonitorThread")
+        self.log.info(f"Running monitor thread ApiGetTasksMonitorThread")
         self.get_metrics()
 
 
-class CeleryTaskTypesByStateMonitorThread(CeleryTaskTypesByStateSetupMonitorThread):
+class ApiGetTasksMonitorThread(ApiGetTasksSetupMonitorThread):
     @property
     def endpoint(self):
         return self.flower_host + "/api/tasks"
@@ -78,7 +87,9 @@ class CeleryTaskTypesByStateMonitorThread(CeleryTaskTypesByStateSetupMonitorThre
     def convert_data_to_prometheus(self, data):
         # Here, 'data' is a dictionary type for "print(type(data))".
         # See https://flower.readthedocs.io/en/latest/api.html
-        self.log.debug("Convert data to prometheus, clear the gauges.")
+        # API call for '/api/tasks' returns JSON with task name, each with kv pairs
+        # at the second level, from which we extract the task's state.
+        self.log.debug("Convert task data to prometheus")
 
         # First run, clear all the task_type - state gauges from this API call:
         for key, value in data.items():
@@ -102,6 +113,26 @@ class CeleryTaskTypesByStateMonitorThread(CeleryTaskTypesByStateSetupMonitorThre
                 if k1 == "state":
                     state = str(v1)
             CELERY_TASK_TYPES_BY_STATE.labels(task_type=task_type, state=state).inc()
+
+        # Now let's run though the data again and find the tasks which have been
+        # languishing for more than 10 seconds.  Note that going below 5 seconds will bog down
+        # the grafana panel for any timerange of more than 1 hour.
+        # See https://flower.readthedocs.io/en/latest/api.html
+        for key, value in data.items():
+            state = ""
+            runtime = ""
+            for k1, v1 in value.items():
+                if k1 == "runtime":
+                    if v1 is None:
+                        runtime = float(0)
+                    else:
+                        runtime = v1
+                if k1 == "state":
+                    state = v1
+            if runtime > 10.0:
+                CELERY_TASK_DURATION_SECONDS_BY_STATE.labels(name=key, state=state).set(
+                    runtime
+                )
 
 
 # Cheers!

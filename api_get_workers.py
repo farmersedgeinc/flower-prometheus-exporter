@@ -11,11 +11,11 @@ CELERY_WORKERS = prometheus_client.Gauge(
 # See https://github.com/prometheus/client_python
 
 
-class CeleryWorkersSetupMonitorThread(threading.Thread):
+class ApiGetWorkersSetupMonitorThread(threading.Thread):
     def __init__(self, flower_host, *args, **kwargs):
         self.flower_host = flower_host
         self.log = logging.getLogger("monitor")
-        self.log.info("Setting up monitor thread: CeleryWorkersMonitorThread")
+        self.log.info("Setting up monitor thread: ApiGetWorkersMonitorThread")
         self.log.debug(f"Running monitoring thread for {self.flower_host} host.")
         self.setup_metrics()
         super().__init__(*args, **kwargs)
@@ -62,13 +62,13 @@ class CeleryWorkersSetupMonitorThread(threading.Thread):
 
     def run(self):
         self.log.debug(
-            f"Running monitor thread CeleryWorkersMonitorThread for {self.flower_host}"
+            f"Running monitor thread ApiGetWorkersMonitorThread for {self.flower_host}"
         )
-        self.log.info(f"Running monitor thread CeleryWorkersMonitorThread")
+        self.log.info(f"Running monitor thread ApiGetWorkersMonitorThread")
         self.get_metrics()
 
 
-class CeleryWorkersMonitorThread(CeleryWorkersSetupMonitorThread):
+class ApiGetWorkersMonitorThread(ApiGetWorkersSetupMonitorThread):
     @property
     def endpoint(self):
         self.log.debug("URL endpoint: " + self.flower_host)
