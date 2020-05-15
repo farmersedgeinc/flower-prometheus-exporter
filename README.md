@@ -12,7 +12,7 @@ This was **hugely** inspired by work in these two repositories:
 
 So far it provides access to the following metrics for use in Grafana:
 
-1) CELERY_WORKERS (Gauge) [app] with count   (This gives the worker's name, but I am not currently displaying the name in grafana.)
+1) CELERY_WORKERS (Gauge) count   (This gives the worker's name, but I am not currently displaying the name in grafana.)
    This is set up as a "Singlestat" in grafana with `sum(celery_workers{job=~"$job"})`
 
 2) CELERY_TASK_TYPES_BY_STATE ['task_type', 'state'] with count of instances of each task_type

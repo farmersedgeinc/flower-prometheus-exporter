@@ -115,8 +115,8 @@ class ApiGetTasksMonitorThread(ApiGetTasksSetupMonitorThread):
             CELERY_TASK_TYPES_BY_STATE.labels(task_type=task_type, state=state).inc()
 
         # Now let's run though the data again and find the tasks which have been
-        # languishing for more than 10 seconds.  Note that going below 5 seconds will bog down
-        # the grafana panel for any timerange of more than 1 hour.
+        # languishing for more than 20 seconds.  Note that going below 10 seconds will
+        # bog down the grafana panel for any timerange of more than 1 hour.
         # See https://flower.readthedocs.io/en/latest/api.html
         for key, value in data.items():
             state = ""
@@ -129,7 +129,7 @@ class ApiGetTasksMonitorThread(ApiGetTasksSetupMonitorThread):
                         runtime = v1
                 if k1 == "state":
                     state = v1
-            if runtime > 10.0:
+            if runtime > 20.0:
                 CELERY_TASK_DURATION_SECONDS_BY_STATE.labels(name=key, state=state).set(
                     runtime
                 )

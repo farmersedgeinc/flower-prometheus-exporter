@@ -4,9 +4,7 @@ import time
 import prometheus_client
 import requests
 
-CELERY_WORKERS = prometheus_client.Gauge(
-    "celery_workers", "Number of alive workers", ["app"]
-)
+CELERY_WORKERS = prometheus_client.Gauge("celery_workers", "Number of alive workers")
 
 # See https://github.com/prometheus/client_python
 
@@ -22,9 +20,7 @@ class ApiGetWorkersSetupMonitorThread(threading.Thread):
 
     def setup_metrics(self):
         logging.info("Setting metrics up")
-        for metric in CELERY_WORKERS.collect():
-            for sample in metric.samples:
-                CELERY_WORKERS.labels(**sample[1]).set(0)
+        CELERY_WORKERS.set(0)
 
     def get_metrics(self):
         while True:
@@ -78,11 +74,10 @@ class ApiGetWorkersMonitorThread(ApiGetWorkersSetupMonitorThread):
         # Here, 'data' is a dictionary type for "print(type(data))".
         # See https://flower.readthedocs.io/en/latest/api.html
         self.log.debug("Convert data to prometheus")
-        app = "triss-test"
-        CELERY_WORKERS.labels(app).set(0)
+        CELERY_WORKERS.set(0)
         for k, v in data.items():
             self.log.debug("Worker: " + str(k))
-            CELERY_WORKERS.labels(app).inc()
+            CELERY_WORKERS.inc()
 
 
 # Cheers!
