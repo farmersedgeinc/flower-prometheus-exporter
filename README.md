@@ -19,9 +19,9 @@ So far it provides access to the following metrics for use in Grafana:
    This is set up as a "Graph" in grafana with `sum(celery_task_types_by_state{job=~"$job", state="RECEIVED"}) by (task_type)`,
    just change the "state" for each kind "FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS".
 
-3) CELERY_TASK_DURATION_BY_STATE ['name', 'state'] with runtime as the counter
+~~3) CELERY_TASK_DURATION_BY_STATE ['name', 'state'] with runtime as the counter
    This is set up as a "Graph" in grafana with `celery_task_duration_seconds_by_state{job=~"$job",state="RECEIVED"}`
-   With Label Format: `{{name}}`
+   With Label Format: `{{name}}`~~ (High cardinality, poor candidate for metrics.)
 
 ## How to use:
 
