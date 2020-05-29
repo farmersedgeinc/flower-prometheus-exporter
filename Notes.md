@@ -1,37 +1,4 @@
-# TRISS FLOWER Grafana Dashboard:
-
-1) CELERY_WORKERS (Gauge) count   (This gives the worker's name, but I am not currently displaying the name in grafana.)
-   This is set up as a "Singlestat" in grafana with `sum(celery_workers{job=~"$job"})`
-
-2) CELERY_TASK_TYPES_BY_STATE ['task_type', 'state'] with count of instances of each task_type
-   This is set up as a "Graph" in grafana with `sum(celery_task_types_by_state{job=~"$job", state="RECEIVED"}) by (task_type)`,
-   just change the "state" for each kind "FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS".
-
-3) CELERY_TASK_DURATION_BY_STATE ['name', 'state'] with runtime as the counter
-   This is set up as a "Graph" in grafana with `celery_task_duration_seconds_by_state{job=~"$job",state="RECEIVED"}`
-   With Label Format: `{{name}}`
-
-## Cruft
-
-```
-topk(15, celery_task_duration_seconds_by_state{job="michel-flower-exporter", state="SUCCESS"})
-
-topk(15, sum(celery_task_duration_seconds_by_state{job=~"$job", state="RECEIVED"}) by (name))
-
-topk(15, sum(rate(celery_task_duration_seconds_by_state{job=~"$job", state="SUCCESS"}[$TIME_FRAME])) by (name))
-
-WORKS in PROM: topk(7, sum(celery_task_duration_seconds_by_state{job="michel-flower-exporter", state="SUCCESS"}) by (name))
-
-WORKS IN PROM:  topk(7, celery_task_duration_seconds_by_state) 
-
-This will take each "NAME" as a seperate thing to get the top X, so then entire list "topk(7, celery_task_duration_seconds_by_state) by (name)"
-
-shorter list when by state: topk(7, celery_task_duration_seconds_by_state) by (state)
-
-sort_desc(celery_task_duration_seconds_by_state{job=~"$job",state="SUCCESS"})  and lengend-format {{name}}
-
-https://prometheus.io/docs/prometheus/latest/querying/functions/
-```
+# Notes regarding the restart issue.
 
 ## References:
 

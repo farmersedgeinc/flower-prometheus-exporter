@@ -4,19 +4,12 @@ import time
 import prometheus_client
 import requests
 
+# See https://github.com/prometheus/client_python for information about the prometheus_client.
 CELERY_TASK_TYPES_BY_STATE = prometheus_client.Gauge(
     "celery_task_types_by_state",
     "The count of each state for each task type",
     ["task_type", "state"],
 )
-
-# CELERY_TASK_DURATION_SECONDS_BY_STATE = prometheus_client.Gauge(
-#    "celery_task_duration_seconds_by_state",
-#    "Runtime for each task and state",
-#    ["name", "state"],
-#)
-
-# See https://github.com/prometheus/client_python
 
 
 class ApiGetTasksSetupMonitorThread(threading.Thread):
@@ -33,9 +26,6 @@ class ApiGetTasksSetupMonitorThread(threading.Thread):
         for metric in CELERY_TASK_TYPES_BY_STATE.collect():
             for sample in metric.samples:
                 CELERY_TASK_TYPES_BY_STATE.labels(**sample[1]).set(0)
-#        for metric in CELERY_TASK_DURATION_SECONDS_BY_STATE.collect():
-#            for sample in metric.samples:
-#                CELERY_TASK_DURATION_SECONDS_BY_STATE.labels(**sample[1]).set(0)
 
     def get_metrics(self):
         while True:
@@ -113,26 +103,6 @@ class ApiGetTasksMonitorThread(ApiGetTasksSetupMonitorThread):
                 if k1 == "state":
                     state = str(v1)
             CELERY_TASK_TYPES_BY_STATE.labels(task_type=task_type, state=state).inc()
-
-        # Now let's run though the data again and find the tasks which have been
-        # languishing for more than 20 seconds.  Note that going below 10 seconds will
-        # bog down the grafana panel for any timerange of more than 1 hour.
-        # See https://flower.readthedocs.io/en/latest/api.html
-#        for key, value in data.items():
-#            state = ""
-#            runtime = ""
-#            for k1, v1 in value.items():
-#                if k1 == "runtime":
-#                    if v1 is None:
-#                        runtime = float(0)
-#                    else:
-#                        runtime = v1
-#                if k1 == "state":
-#                    state = v1
-#            if runtime > 20.0:
-#                CELERY_TASK_DURATION_SECONDS_BY_STATE.labels(name=key, state=state).set(
-#                    runtime
-#                )
 
 
 # Cheers!

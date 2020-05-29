@@ -4,9 +4,8 @@ import time
 import prometheus_client
 import requests
 
+# See https://github.com/prometheus/client_python for information about the prometheus_client.
 CELERY_WORKERS = prometheus_client.Gauge("celery_workers", "Number of alive workers")
-
-# See https://github.com/prometheus/client_python
 
 
 class ApiGetWorkersSetupMonitorThread(threading.Thread):
