@@ -4,27 +4,22 @@ import time
 import prometheus_client
 import requests
 
-CELERY_WORKERS = prometheus_client.Gauge(
-    "celery_workers", "Number of alive workers", ["app"]
-)
-
-# See https://github.com/prometheus/client_python
+# See https://github.com/prometheus/client_python for information about the prometheus_client.
+CELERY_WORKERS = prometheus_client.Gauge("celery_workers", "Number of alive workers")
 
 
-class CeleryWorkersSetupMonitorThread(threading.Thread):
+class ApiGetWorkersSetupMonitorThread(threading.Thread):
     def __init__(self, flower_host, *args, **kwargs):
         self.flower_host = flower_host
         self.log = logging.getLogger("monitor")
-        self.log.info("Setting up monitor thread: CeleryWorkersMonitorThread")
+        self.log.info("Setting up monitor thread: ApiGetWorkersMonitorThread")
         self.log.debug(f"Running monitoring thread for {self.flower_host} host.")
         self.setup_metrics()
         super().__init__(*args, **kwargs)
 
     def setup_metrics(self):
         logging.info("Setting metrics up")
-        for metric in CELERY_WORKERS.collect():
-            for sample in metric.samples:
-                CELERY_WORKERS.labels(**sample[1]).set(0)
+        CELERY_WORKERS.set(0)
 
     def get_metrics(self):
         while True:
@@ -62,13 +57,13 @@ class CeleryWorkersSetupMonitorThread(threading.Thread):
 
     def run(self):
         self.log.debug(
-            f"Running monitor thread CeleryWorkersMonitorThread for {self.flower_host}"
+            f"Running monitor thread ApiGetWorkersMonitorThread for {self.flower_host}"
         )
-        self.log.info(f"Running monitor thread CeleryWorkersMonitorThread")
+        self.log.info(f"Running monitor thread ApiGetWorkersMonitorThread")
         self.get_metrics()
 
 
-class CeleryWorkersMonitorThread(CeleryWorkersSetupMonitorThread):
+class ApiGetWorkersMonitorThread(ApiGetWorkersSetupMonitorThread):
     @property
     def endpoint(self):
         self.log.debug("URL endpoint: " + self.flower_host)
@@ -78,11 +73,10 @@ class CeleryWorkersMonitorThread(CeleryWorkersSetupMonitorThread):
         # Here, 'data' is a dictionary type for "print(type(data))".
         # See https://flower.readthedocs.io/en/latest/api.html
         self.log.debug("Convert data to prometheus")
-        app = "triss-test"
-        CELERY_WORKERS.labels(app).set(0)
+        CELERY_WORKERS.set(0)
         for k, v in data.items():
             self.log.debug("Worker: " + str(k))
-            CELERY_WORKERS.labels(app).inc()
+            CELERY_WORKERS.inc()
 
 
 # Cheers!

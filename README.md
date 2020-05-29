@@ -1,10 +1,9 @@
 # flower-prometheus-exporter
 
 flower-prometheus-exporter is a little exporter for Celery related metrics based on Flower API in 
-order to get picked up by Prometheus. Main idea is to setup alerting based on flower monitoring. 
-This was **hugely** inspired by celery-prometheus-exported. 
+order to get picked up by Prometheus. Main idea is to setup alerting based on flower monitoring.
 
-Work on this was based on these two repositories:
+This was **hugely** inspired by work in these two repositories: 
 
 1. [flower-prometheus-exporter](https://github.com/vooydzig/flower-prometheus-exporter)
 1. [celery_prometheus-exporter](https://github.com/zerok/celery-prometheus-exporter)
@@ -13,16 +12,16 @@ Work on this was based on these two repositories:
 
 So far it provides access to the following metrics for use in Grafana:
 
-1) CELERY_WORKERS (Gauge) [app] with count   (This gives the worker's name, but I am not currently displaying the name in grafana.)
+1) CELERY_WORKERS (Gauge) count   (This gives the worker's name, but I am not currently displaying the name in grafana.)
    This is set up as a "Singlestat" in grafana with `sum(celery_workers{job=~"$job"})`
 
 2) CELERY_TASK_TYPES_BY_STATE ['task_type', 'state'] with count of instances of each task_type
    This is set up as a "Graph" in grafana with `sum(celery_task_types_by_state{job=~"$job", state="RECEIVED"}) by (task_type)`,
    just change the "state" for each kind "FAILURE, PENDING, RECEIVED, RETRY, REVOKED, STARTED, and SUCCESS".
 
-3) CELERY_TASK_DURATION_BY_STATE ['name', 'state'] with runtime as the counter
+~~3) CELERY_TASK_DURATION_BY_STATE ['name', 'state'] with runtime as the counter
    This is set up as a "Graph" in grafana with `celery_task_duration_seconds_by_state{job=~"$job",state="RECEIVED"}`
-   With Label Format: `{{name}}`
+   With Label Format: `{{name}}`~~ (High cardinality, poor candidate for metrics.)
 
 ## How to use:
 

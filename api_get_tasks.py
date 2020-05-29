@@ -4,20 +4,19 @@ import time
 import prometheus_client
 import requests
 
+# See https://github.com/prometheus/client_python for information about the prometheus_client.
 CELERY_TASK_TYPES_BY_STATE = prometheus_client.Gauge(
     "celery_task_types_by_state",
     "The count of each state for each task type",
     ["task_type", "state"],
 )
 
-# See https://github.com/prometheus/client_python
 
-
-class CeleryTaskTypesByStateSetupMonitorThread(threading.Thread):
+class ApiGetTasksSetupMonitorThread(threading.Thread):
     def __init__(self, flower_host, *args, **kwargs):
         self.flower_host = flower_host
         self.log = logging.getLogger("monitor")
-        self.log.info("Setting up monitor thread: CeleryTaskTypesByStateMonitorThread")
+        self.log.info("Setting up monitor thread: ApiGetTasksMonitorThread")
         self.log.debug(f"Running monitoring thread for {self.flower_host} host.")
         self.setup_metrics()
         super().__init__(*args, **kwargs)
@@ -30,7 +29,7 @@ class CeleryTaskTypesByStateSetupMonitorThread(threading.Thread):
 
     def get_metrics(self):
         while True:
-            self.log.debug(f"Getting workers data from {self.flower_host}")
+            self.log.debug(f"Getting task data from {self.flower_host}")
             try:
                 req_session = requests.Session()
                 req_request = requests.Request("GET", self.endpoint)
@@ -64,13 +63,13 @@ class CeleryTaskTypesByStateSetupMonitorThread(threading.Thread):
 
     def run(self):
         self.log.debug(
-            f"Running monitor thread CeleryTaskTypesByStateMonitorThread for {self.flower_host}"
+            f"Running monitor thread ApiGetTasksMonitorThread for {self.flower_host}"
         )
-        self.log.info(f"Running monitor thread CeleryTaskTypesByStateMonitorThread")
+        self.log.info(f"Running monitor thread ApiGetTasksMonitorThread")
         self.get_metrics()
 
 
-class CeleryTaskTypesByStateMonitorThread(CeleryTaskTypesByStateSetupMonitorThread):
+class ApiGetTasksMonitorThread(ApiGetTasksSetupMonitorThread):
     @property
     def endpoint(self):
         return self.flower_host + "/api/tasks"
@@ -78,7 +77,9 @@ class CeleryTaskTypesByStateMonitorThread(CeleryTaskTypesByStateSetupMonitorThre
     def convert_data_to_prometheus(self, data):
         # Here, 'data' is a dictionary type for "print(type(data))".
         # See https://flower.readthedocs.io/en/latest/api.html
-        self.log.debug("Convert data to prometheus, clear the gauges.")
+        # API call for '/api/tasks' returns JSON with task name, each with kv pairs
+        # at the second level, from which we extract the task's state.
+        self.log.debug("Convert task data to prometheus")
 
         # First run, clear all the task_type - state gauges from this API call:
         for key, value in data.items():

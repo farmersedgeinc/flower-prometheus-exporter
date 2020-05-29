@@ -3,14 +3,9 @@ import logging
 import os
 import signal
 import sys
-
 import prometheus_client
-
-from celery_task_duration_seconds_by_state_monitor import (
-    CeleryTaskDurationSecondsByStateMonitorThread,
-)
-from celery_task_types_by_state_monitor import CeleryTaskTypesByStateMonitorThread
-from celery_workers_monitor import CeleryWorkersMonitorThread
+from api_get_tasks import ApiGetTasksMonitorThread
+from api_get_workers import ApiGetWorkersMonitorThread
 
 LOG_FORMAT = "[%(asctime)s: %(levelname)s/%(name)s] - %(message)s"
 
@@ -34,20 +29,15 @@ def setup_monitoring_threads(opts):
     threads = []
     logging.debug(f"Running {len(opts.flower_addr)} monitoring threads.")
     for flower_addr in opts.flower_addr:
-        ctdbs = CeleryTaskDurationSecondsByStateMonitorThread(flower_addr)
-        ctdbs.daemon = True
-        ctdbs.start()
-        threads.append(ctdbs)
+        tasks = ApiGetTasksMonitorThread(flower_addr)
+        tasks.daemon = True
+        tasks.start()
+        threads.append(tasks)
         #
-        cttbs = CeleryTaskTypesByStateMonitorThread(flower_addr)
-        cttbs.daemon = True
-        cttbs.start()
-        threads.append(cttbs)
-        #
-        cw = CeleryWorkersMonitorThread(flower_addr)
-        cw.daemon = True
-        cw.start()
-        threads.append(cw)
+        workers = ApiGetWorkersMonitorThread(flower_addr)
+        workers.daemon = True
+        workers.start()
+        threads.append(workers)
     return threads
 
 
