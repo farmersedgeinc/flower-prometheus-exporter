@@ -34,10 +34,10 @@ def setup_monitoring_threads(opts):
         tasks.start()
         threads.append(tasks)
         #
-        workers = ApiGetWorkersMonitorThread(flower_addr)
-        workers.daemon = True
-        workers.start()
-        threads.append(workers)
+        # workers = ApiGetWorkersMonitorThread(flower_addr)
+        # workers.daemon = True
+        # workers.start()
+        # threads.append(workers)
     return threads
 
 
