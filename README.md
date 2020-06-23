@@ -12,8 +12,10 @@ This was **hugely** inspired by work in these two repositories:
 
 So far it provides access to the following metrics for use in Grafana:
 
-1) CELERY_WORKERS (Gauge) count   (This gives the worker's name, but I am not currently displaying the name in grafana.)
-   This is set up as a "Singlestat" in grafana with `sum(celery_workers{job=~"$job"})`
+~~1) CELERY_WORKERS (Gauge) count   (This gives the worker's name, but I am not currently displaying the name in grafana.)
+   This is set up as a "Singlestat" in grafana with `sum(celery_workers{job=~"$job"})`~~  Update 2020Jun23, this was only
+   being used for a count of the workers, but it pulls almost a gig each time it is called, causing pod crashed due to 
+   curl timeouts.  So disabling it due to its high cost/low value.
 
 2) CELERY_TASK_TYPES_BY_STATE ['task_type', 'state'] with count of instances of each task_type
    This is set up as a "Graph" in grafana with `sum(celery_task_types_by_state{job=~"$job", state="RECEIVED"}) by (task_type)`,
