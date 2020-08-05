@@ -53,14 +53,8 @@ For better logging use `--verbose`
 For example:
 `python flower-prometheus-exporter --flower http://127.0.0.1:5000 http://127.0.0.1:6000 http://127.0.0.1:5555
 `
-## Build example:
 
-```
-docker build -f ./Dockerfile -t flower-exporter .
-docker login docker.granduke.net
-docker tag flower-exporter docker.granduke.net/flower-exporter
-docker push docker.granduke.net/flower-exporter
-```
+See an example of building the image in the `build` file.
 
 ## Reference:
 

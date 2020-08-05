@@ -34,7 +34,7 @@ class ApiGetTasksSetupMonitorThread(threading.Thread):
                 req_session = requests.Session()
                 req_request = requests.Request("GET", self.endpoint)
                 request_prepped = req_session.prepare_request(req_request)
-                data = req_session.send(request_prepped, timeout=(3, 15))
+                data = req_session.send(request_prepped, timeout=27))
                 self.log.debug(
                     "API request.get status code: "
                     + str(data.status_code)
