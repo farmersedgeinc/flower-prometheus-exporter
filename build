@@ -1,10 +1,11 @@
 
  docker rmi flower-exporter
- docker rmi docker.granduke.net/flower-exporter
+ docker rmi gcr.io/shared-92kdnmcv0fk/flower-exporter
  docker images
  sleep 2
  docker build -f ./Dockerfile -t flower-exporter .
- docker login docker.granduke.net
- docker tag flower-exporter docker.granduke.net/flower-exporter
- docker push docker.granduke.net/flower-exporter
+ gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://gcr.io
+ docker tag flower-exporter gcr.io/shared-92kdnmcv0fk/flower-exporter
+ docker push gcr.io/shared-92kdnmcv0fk/flower-exporter
 
+# https://cloud.google.com/container-registry/docs/pushing-and-pulling
